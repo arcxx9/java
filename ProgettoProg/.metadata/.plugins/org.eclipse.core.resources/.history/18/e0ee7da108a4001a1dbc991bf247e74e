@@ -1,0 +1,236 @@
+package view;
+
+import java.awt.Color;
+
+import java.awt.EventQueue;
+import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+
+import classidb.Database;
+import enumerazione.Enum;
+
+public class CercaUtente extends JFrame {
+	private JPanel panelUtenti;
+	private String usernameUtente;
+	
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					CercaUtente window = new CercaUtente();
+					window.panelUtenti.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	public CercaUtente() {
+		ImageIcon iconaSuccesso = new ImageIcon(Home.class.getResource("/images/successo.png"));
+        ImageIcon iconaErrore = new ImageIcon(Home.class.getResource("/images/errore.png"));
+		Database D = Database.getIstance();
+
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		setBounds(100, 100, 536, 390);
+
+		panelUtenti = new JPanel();
+		panelUtenti.setForeground(new Color(255, 255, 255));
+		panelUtenti.setBackground(new Color(0, 204, 255));
+
+		panelUtenti.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+		setContentPane(panelUtenti);
+
+		panelUtenti.setLayout(null);
+		
+
+		JLabel lblUtenti = new JLabel("Utenti");
+		lblUtenti.setForeground(new Color(255, 255, 255));
+
+		lblUtenti.setLabelFor(panelUtenti);
+
+		lblUtenti.setHorizontalAlignment(SwingConstants.CENTER);
+
+		lblUtenti.setBackground(new Color(255, 255, 255));
+
+		lblUtenti.setBounds(194, 6, 100, 20);
+
+		panelUtenti.add(lblUtenti);
+
+		JScrollPane scrollPane = new JScrollPane();
+
+		scrollPane.setViewportBorder(new EmptyBorder(0, 1, 0, 0));
+
+		scrollPane.setEnabled(false);
+
+		scrollPane.setBounds(20, 34, 495, 266);
+
+		panelUtenti.add(scrollPane);
+
+		JTable table = new JTable(D.elencoUtenti()) {
+
+			@Override
+
+			public boolean isCellEditable(int row, int column) {
+
+				return false;
+
+			}
+
+		};
+		
+		((DefaultTableModel)table.getModel()).removeRow(0); //toglie la prima riga perchè è un admin
+	
+
+		table.setBounds(6, 193, 426, -134);
+
+		scrollPane.setViewportView(table);
+
+		JButton btnFollow = new JButton("FOLLOW");
+		btnFollow.setForeground(new Color(0, 204, 255));
+		btnFollow.setBackground(new Color(255, 255, 255));
+
+		btnFollow.setBounds(398, 316, 117, 29);
+
+		panelUtenti.add(btnFollow);
+		
+		//Fare un action che inserisce A db l utente loggato e l username dell utente che seleziona 
+		btnFollow.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				int row;
+				row = table.getSelectedRow();
+				
+				usernameUtente = (String) table.getValueAt(row, 0); //sta assegnando ad un utente la prima riga,colonna 0
+				if(!Home.getUsername().equals(usernameUtente)) { //fa il confronto tra la persona che ha fatto l'accesso con la persona selezionata
+					
+			
+					
+				try {
+				D.inserisciFollower(Home.getUsername(), usernameUtente);
+				
+				
+				JOptionPane.showMessageDialog(panelUtenti, "Stai seguendo questo utente",null,0,iconaSuccesso);
+				((DefaultTableModel)table.getModel()).removeRow(row);
+				
+				} catch (SQLIntegrityConstraintViolationException s) {
+					JOptionPane.showMessageDialog(panelUtenti, "Stai gia' seguendo questo utente",null,0,iconaErrore);
+					
+				} catch (SQLException e1) {
+					
+					e1.printStackTrace();
+				}
+				
+				} else {
+					
+					JOptionPane.showMessageDialog(panelUtenti, "Non puoi seguire te stesso",null,0,iconaErrore);
+
+				}
+				}
+
+				
+				
+					
+			
+	});
+	
+		
+	
+	
+	JButton btnLogOut = new JButton("INDIETRO");
+	btnLogOut.setForeground(new Color(0, 204, 255));
+	btnLogOut.setBackground(new Color(255, 255, 255));
+
+	 btnLogOut.setBounds(10, 316, 117, 29);
+
+	 panelUtenti.add(btnLogOut); 
+
+	btnLogOut.addActionListener(new ActionListener() {
+
+	 public void actionPerformed(ActionEvent e) {
+
+
+	 
+    MenuUtente menu = new MenuUtente();
+    menu.main(null);
+    CercaUtente.this.dispose();
+	
+
+	}
+
+	});
+		JButton btnMsg = new JButton("MESSAGGIO"); //crea il bottone messaggio
+		btnMsg.setBackground(new Color(255, 255, 255));
+		btnMsg.setForeground(new Color(0, 204, 255));
+		btnMsg.setBounds(194, 316, 117, 29);
+		panelUtenti.add(btnMsg); //aggiunge al pannello il bottone messaggio
+		btnMsg.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				
+				int row;
+				row = table.getSelectedRow();
+				
+				String userReceive = (String) table.getValueAt(row, 0); //prendo l'utente che riceve dala prima riga e prima colonna
+				String userSend = Home.getUsername(); //prendo l'utente che invia il messaggio
+				
+				Object[] tipo = { "Annulla ", "SMS", "EMAIL" };
+				JPanel panel = new JPanel(); 
+				if(!userReceive.equals(userSend)) { //l'utente che riceve non deve essere lo stesso dell'utente che ha inviato.
+					
+				
+				panel.add(new JLabel("Come si desidera mandare il messaggio?"));
+
+				int scelta = JOptionPane.showOptionDialog(null, panel, "Selezionare tipo",
+						JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, tipo, null); //seleziono come mandare il messaggio.
+				
+				if (scelta == 1) {
+					int res = JOptionPane.showOptionDialog(panel,
+							"Hai selezionato sms", null,
+							JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+					if (res == JOptionPane.OK_OPTION) {
+						
+						SmsSend sms = new SmsSend(userSend, userReceive);
+						sms.setVisible(true);
+						CercaUtente.this.dispose();
+					}
+				
+
+			} 
+				if (scelta==2) {
+					int res = JOptionPane.showOptionDialog(panel,
+							"Hai selezionato email", null,
+							JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+					if (res == JOptionPane.OK_OPTION) {
+						
+					
+						EmailSend email = new EmailSend(userSend, userReceive);
+						email.setVisible(true);
+						CercaUtente.this.dispose();
+					}
+					
+				}
+				
+			} else {
+			
+			JOptionPane.showMessageDialog(panelUtenti, "Non puoi inviare un messaggio a te stesso");
+			}
+			}
+		});
+	
+}
+	}
+
+
+
+		

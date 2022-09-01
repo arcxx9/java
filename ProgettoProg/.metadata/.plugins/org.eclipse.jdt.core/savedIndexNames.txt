@@ -1,0 +1,5 @@
+INDEX VERSION 1.131+C:\Users\Jumper\Desktop\ProgettoProg\.metadata\.plugins\org.eclipse.jdt.core
+588293300.index
+1863313904.index
+313484273.index
+1671692264.index
